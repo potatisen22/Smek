@@ -71,7 +71,7 @@ for i = 1:Nchunk %9.11 till 9.12 i boken gör vi dft per element?
 end
 Sxy=mean(SS');
 semilogy(f,Sxy(1:length(Sxy)/2))
-title('A2, EGET PSD FÖR JAG ÄR BÄTTRE ÄN MATLAAAAAAAAAB~~~')
+title('OWN PSD IN MATLAB')
 %% B
 %coherence PSD
 clc;
@@ -128,7 +128,7 @@ plot(f,phase(H2))
 legend('phaseH1','phaseH2')
 %% D
 close all;
-for i = 1:4
+for i = 1:3
     if i == 1
        na = 4;
        nb = 3;
@@ -209,7 +209,7 @@ for i = 1:2
     hold on
 
 end
-
+legend('NFFT = 4096', 'NFFT = 16384')
 window = hanning(4096,'periodic');
 noverlap = 4096/2;
 figure()
@@ -231,13 +231,13 @@ t400=[1:400]'/1000;
 x400=sin(2*pi*fsin*t400)+randn(size(t400))/10;
 figure()
 plot(t400,x400)
-title('tid 400 punkter')
 hold on
 fsin = 10;
 t450=[1:450]'/1000;
 x450=sin(2*pi*fsin*t450)+randn(size(t450))/10;
 plot(t450,x450)
-title('tid 450 punkter')
+title('time domain')
+legend('n=400','n=450')
 
 %andra nedan
 NFFT=400;
@@ -253,6 +253,7 @@ NFFT=450;
 xfft=fft(x450,NFFT);
 xfftrms2 = sqrt(2)*abs(xfft)/NFFT;
 plot(fvek(1:200),xfftrms2(1:200));
+title('Linear line spectra')
 legend('n=400','n=450')
 %% G
 close all
@@ -322,55 +323,82 @@ Rs = 10;
 [N, Wn] = buttord(Wp, Ws, Rp, Rs);
 [b,a] = butter(N,Wn);
 x2 = filter(b,a,x);
+xsmor=x2
 fvtool(b,a);
 figure()
-plot(t,x2);
-hold on
-plot(t,x);
-figure()
-t2=abs(fft(x,length(x2)));
-plot(t2(1:end/2))
-hold on
-t1 = abs(fft(x2,length(x2)));
-plot(t1(1:end/2)) 
-title ('Smör filter')
-legend('Original signal','Damped signal')
+t2=abs(fft(x,length(x2))); 
+t1butt = abs(fft(x2,length(x2)));
 % chernobyl
 [N, Wp] = cheb1ord(Wp, Ws, Rp, Rs);
 R = 0.5;
 [b,a] = cheby1(N,R,Wp,'low');
 x2 = filter(b,a,x);
-fvtool(b,a);
-figure()
-plot(t,x2);
-hold on
-plot(t,x);
-figure()
+xcheb=x2
+freqz(b,a);
 t2=abs(fft(x,length(x)));
-plot(t2(1:end/2))
-hold on
-t1 = abs(fft(x2,length(x2)));
-plot(t1(1:end/2)) 
-title ('Chjernobyl filter')
-legend('Original signal','Damped signal')
+t1cheb = abs(fft(x2,length(x2)));
 % Ellipserna
 [N, Wp]=ellipord(Wp, Ws, Rp, Rs);
 [b,a]=ellip(N,Rp,Rs,Wp,'low');
 x2 = filter(b,a,x);
+xellip=x2
 fvtool(b,a);
 figure()
-plot(t,x2);
+t2=abs(fft(x,length(x)));
+t1ellip = abs(fft(x2,length(x2)));
+%tidsplott
+figure()
+limit=[0 0.4 -3 3]
+subplot(221)
+plot(t,xellip);
 hold on
 plot(t,x);
+axis(limit)
+legend('Damped signal','Original signal')
+title('time signal ellip')
+subplot(222)
+plot(t,xcheb);
+hold on
+plot(t,x);
+axis(limit)
+legend('Damped signal','Original signal')
+title('time signal chebyshev')
+subplot(223)
+plot(t,xsmor);
+hold on
+plot(t,x);
+legend('Damped signal','Original signal')
+axis(limit)
+title('time signal butterworth')
+subplot(224)
+plot(t,x);
+legend('Damped signal','Original signal')
+axis(limit)
+title('time signal original')
+%plotta frekvensspektrum
 figure()
-t2=abs(fft(x,length(x)));
+subplot(221)
 plot(t2(1:end/2))
 hold on
-t1 = abs(fft(x2,length(x2)));
-plot(t1(1:end/2)) 
-title ('ellip filter')
+plot(t1butt(1:end/2)) 
+title ('butterworth filter')
 legend('Original signal','Damped signal')
 
+subplot(222)
+plot(t2(1:end/2))
+hold on
+plot(t1cheb(1:end/2)) 
+title ('chebyshev filter')
+legend('Original signal','Damped signal')
+subplot(223)
+plot(t2(1:end/2))
+hold on
+plot(t1ellip(1:end/2)) 
+title ('ellip filter')
+legend('Original signal','Damped signal')
+subplot(224)
+plot(t2(1:end/2))
+title ('Original signal')
 %% I2 %ellips är inte så bra här egentligen, c
 clc;
 clear all;
@@ -394,7 +422,7 @@ plot(f*fs/(2*pi),10*log10(YF),'r')
 hold on
 [YF,f]=pwelch(x2,window,noverlap,4096);
 plot(f*fs/(2*pi),10*log10(YF),'b')
-title ('Ellips Filter')
+title ('Ellip Filter I2')
 legend('Original signal','Damped signal')
 
 %% J1
@@ -429,7 +457,7 @@ plot(f*fs/(2*pi),10*log10(YF),'r')
 hold on
 [YF,f]=pwelch(x2,window,noverlap,4096);
 plot(f*fs/(2*pi),10*log10(YF),'b')
-title ('Ellips BANDPASS filter')
+title ('Ellips BANDPAS filter')
 legend('Original signal','Damped signal')
 
 %% J2
@@ -439,12 +467,9 @@ clear all;
 fs = 2000;
 load('fa1.mat')
 x = fa1(:,3);
-Wp = [500 580]/(fs/2);
-Ws = [499 581]/(fs/2);
-Rp = 0.1;
-Rs = 20;
-[N, Wp] = ellipord(Wp, Ws, Rp, Rs);
-[B,A]= ellip (N,Rp,Rs,Wp);
+Wc = [480 573]./(fs/2);
+N = 8;
+[B,A]= butter (N,Wc);
 fvtool(B,A);
 x2 = filter(B,A,x);
 fvtool(B,A);
@@ -456,5 +481,5 @@ plot(f*fs/(2*pi),10*log10(YF),'r')
 hold on
 [YF,f]=pwelch(x2,window,noverlap,4096);
 plot(f*fs/(2*pi),10*log10(YF),'b')
-title ('Ellips Filter')
+title ('Chebyshev Filter J2')
 legend('Original signal','Damped signal')
